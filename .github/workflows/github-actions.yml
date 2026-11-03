@@ -54,6 +54,8 @@ jobs:
               if ./writer "$tmpdir/missing/file" text; then exit 1; fi
               if ./writer "$tmpdir" text; then exit 1; fi
               if ./writer /dev/full text; then exit 1; fi
+          - name: Verify real syslog messages
+            run: ruby assignments/assignment2/verify-syslog.rb
     cross-compile:
         runs-on: ubuntu-24.04
         steps:
