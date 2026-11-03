@@ -18,7 +18,7 @@ jobs:
           - name: Run unit test
             run: ./unit-test.sh
     full-test:
-        container: cuaesd/aesd-autotest:24-assignment1
+        container: cuaesd/aesd-autotest:24-assignment2
         runs-on: ubuntu-24.04
         steps:
           - uses: actions/checkout@v4
@@ -26,3 +26,49 @@ jobs:
             run : git submodule update --init --recursive
           - name: Run full test
             run: ./full-test.sh
+          - name: Verify file IO and error handling
+            shell: bash
+            run: |
+              set -euo pipefail
+              cd finder-app
+              make clean
+              make
+              tmpdir=$(mktemp -d)
+              trap 'rm -rf "$tmpdir"' EXIT
+              ./writer "$tmpdir/file with spaces.txt" 'first value'
+              ./writer "$tmpdir/file with spaces.txt" 'second % value'
+              test "$(cat "$tmpdir/file with spaces.txt")" = 'second % value'
+              ./writer "$tmpdir/empty.txt" ''
+              test "$(wc -l < "$tmpdir/empty.txt")" -eq 1
+              for arguments in noargs missing extra; do
+                set +e
+                case "$arguments" in
+                  noargs) ./writer ;;
+                  missing) ./writer "$tmpdir/file" ;;
+                  extra) ./writer "$tmpdir/file" text extra ;;
+                esac
+                rc=$?
+                set -e
+                test "$rc" -eq 1
+              done
+              if ./writer "$tmpdir/missing/file" text; then exit 1; fi
+              if ./writer "$tmpdir" text; then exit 1; fi
+              if ./writer /dev/full text; then exit 1; fi
+          - name: Cross compile and record toolchain evidence
+            shell: bash
+            run: |
+              set -euo pipefail
+              mkdir -p assignments/assignment2
+              aarch64-none-linux-gnu-gcc -v > assignments/assignment2/cross-compile.txt 2>&1
+              aarch64-none-linux-gnu-gcc -print-sysroot >> assignments/assignment2/cross-compile.txt
+              make -C finder-app clean
+              make -C finder-app CROSS_COMPILE=aarch64-none-linux-gnu-
+              file finder-app/writer | tee assignments/assignment2/fileresult.txt
+              grep -q 'ARM aarch64' assignments/assignment2/fileresult.txt
+              if test -f assignments/assignment2/README.md; then
+                git diff --exit-code -- assignments/assignment2/cross-compile.txt assignments/assignment2/fileresult.txt
+              fi
+          - uses: actions/upload-artifact@v4
+            with:
+              name: assignment2-evidence
+              path: assignments/assignment2/*.txt
