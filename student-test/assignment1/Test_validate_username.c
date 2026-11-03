@@ -1,6 +1,7 @@
 #include "unity.h"
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../../examples/autotest-validate/autotest-validate.h"
 #include "../../assignment-autotest/test/assignment1/username-from-conf-file.h"
 
@@ -14,9 +15,10 @@
 */
 void test_validate_my_username()
 {
-    /**
-     * TODO: Replace the line below with your code here as described above to verify your /conf/username.txt 
-     * config file and my_username() functions are setup properly
-     */
-    TEST_ASSERT_TRUE_MESSAGE(false,"AESD students, please fix me!");
+    const char *expected = my_username();
+    char *configured = malloc_username_from_conf_file();
+    TEST_ASSERT_NOT_NULL_MESSAGE(configured, "Could not read configured username");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(expected, configured,
+                                    "Configured and compiled usernames must match");
+    free(configured);
 }
