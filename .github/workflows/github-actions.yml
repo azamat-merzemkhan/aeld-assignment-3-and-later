@@ -18,40 +18,14 @@ jobs:
           - name: Run unit test
             run: ./unit-test.sh
     full-test:
-        timeout-minutes: 45
-        container: cuaesd/aesd-autotest:24-assignment3
+        container: cuaesd/aesd-autotest:24-assignment5
         runs-on: ubuntu-24.04
         steps:
           - uses: actions/checkout@v4
           - name: Checkout submodules
-            run : git submodule update --init --recursive
-          - uses: actions/cache/restore@v4
-            id: kernel-cache
-            with:
-              path: |
-                /tmp/aesd-autograder/linux-stable
-                /tmp/aesd-autograder/busybox
-              key: manual-linux-arm64-5.15.163-busybox-1.33.1-gcc13-v1
-          - name: Run full test
+            run: git submodule update --init --recursive
+          - name: Run native socket validation
             run: ./full-test.sh
-          - uses: actions/cache/save@v4
-            if: always() && steps.kernel-cache.outputs.cache-hit != 'true'
-            with:
-              path: |
-                /tmp/aesd-autograder/linux-stable
-                /tmp/aesd-autograder/busybox
-              key: manual-linux-arm64-5.15.163-busybox-1.33.1-gcc13-v1
-          - name: Rebuild existing output directory
-            run: ./finder-app/manual-linux.sh /tmp/aesd-autograder
-          - name: Validate rebuilt image in QEMU
-            run: SKIP_BUILD=1 DO_VALIDATE=1 ./full-test.sh
-          - uses: actions/upload-artifact@v4
-            if: always()
-            with:
-              name: assignment3-qemu-evidence
-              path: |
-                /tmp/aesd-autograder/serial.log
-                test.sh.log
     cross-compile:
         runs-on: ubuntu-24.04
         steps:
