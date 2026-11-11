@@ -8,11 +8,16 @@ set -u
 NUMFILES=10
 WRITESTR=AELD_IS_FUN
 WRITEDIR=/tmp/aeld-data
-cd "$(dirname "$0")"
-CONF_DIR=conf
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+CONF_DIR=/etc/finder-app/conf
 if [ ! -d "$CONF_DIR" ]; then
-    CONF_DIR=../conf
+    CONF_DIR="$SCRIPT_DIR/conf"
 fi
+if [ ! -d "$CONF_DIR" ]; then
+    CONF_DIR="$SCRIPT_DIR/../conf"
+fi
+WRITER=$(command -v writer || printf '%s/writer' "$SCRIPT_DIR")
+FINDER=$(command -v finder.sh || printf '%s/finder.sh' "$SCRIPT_DIR")
 username=$(cat "$CONF_DIR/username.txt")
 
 if [ $# -lt 3 ]
@@ -56,10 +61,11 @@ fi
 
 for i in $( seq 1 $NUMFILES)
 do
-	./writer "$WRITEDIR/${username}$i.txt" "$WRITESTR"
+	"$WRITER" "$WRITEDIR/${username}$i.txt" "$WRITESTR"
 done
 
-OUTPUTSTRING=$(./finder.sh "$WRITEDIR" "$WRITESTR")
+OUTPUTSTRING=$("$FINDER" "$WRITEDIR" "$WRITESTR")
+printf '%s\n' "$OUTPUTSTRING" > /tmp/assignment4-result.txt
 
 # remove temporary directories
 rm -rf /tmp/aeld-data
