@@ -55,7 +55,8 @@ cp linux-stable/arch/arm64/boot/Image "$OUTDIR/Image"
 
 # Recreate staging on every run so deleted or changed files cannot leak in.
 "${SUDO[@]}" rm -rf -- "$ROOTFS"
-mkdir -p "$ROOTFS"/{bin,dev,etc,home/conf,lib,lib64,proc,sbin,sys,tmp,usr/bin,usr/sbin,var/log}
+mkdir -p "$ROOTFS"/{bin,dev,etc,home/conf,lib64,proc,sbin,sys,tmp,usr/bin,usr/sbin,var/log}
+ln -s lib64 "$ROOTFS/lib"
 chmod 1777 "$ROOTFS/tmp"
 
 if [ ! -d busybox ]; then
